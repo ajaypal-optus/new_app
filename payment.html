@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment</title>
+
+   
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<h2>Pay for your Order</h2>
+
+<button onclick="payNow()">Pay Now</button>
+
+<script>
+function payNow() {
+
+    fetch("create_razorpay_order.php", {
+        method: "POST"
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        var options = {
+            "key": "rzp_test_SfeWnuAH9CFuJD", 
+            "amount": data.amount,
+            "currency": "INR",
+            "name": "My Shop",
+            "description": "Order Payment",
+            "order_id": data.razorpay_order_id,
+
+            
+            "handler": function (response) {
+
+                fetch("verify_payment.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        order_id: data.order_id
+                    })
+                })
+                .then(res => res.json())
+                .then(result => {
+
+                    if (result.error) {
+                        alert(result.error);
+                        return;
+                    }
+
+                    
+                    window.location.href =
+                        "success.html?order_id=" + data.order_id;
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("Payment verification failed");
+                });
+            },
+
+           
+            "modal": {
+                "ondismiss": function() {
+                    alert("Payment cancelled by user");
+                }
+            }
+        };
+
+        var rzp = new Razorpay(options);
+
+        
+        rzp.on('payment.failed', function (response) {
+            alert("Payment failed: " + response.error.description);
+        });
+
+        rzp.open();
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Something went wrong while creating order");
+    });
+}
+</script>
+
+</body>
+</html>

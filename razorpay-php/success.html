@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Success</title>
+</head>
+<body>
+
+<h1>Payment Successful</h1>
+<div id="order"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get("order_id");
+
+fetch("order_details.php?order_id=" + orderId)
+.then(res => res.json())
+.then(data => {
+
+    document.getElementById("order").innerHTML = `
+        <p>Order ID: ${data.id}</p>
+        <p>Total: ₹${data.total_amount}</p>
+        <p>Status: ${data.status}</p>
+    `;
+});
+</script>
+
+</body>
+</html>
